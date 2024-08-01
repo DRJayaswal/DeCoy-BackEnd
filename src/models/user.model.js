@@ -1,78 +1,96 @@
-import mongoose, { mongo, Schema } from "mongoose";
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
+import mongoose, { Schema } from "mongoose";
+import dotenv from "dotenv";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-export const userSchema = new mongoose.Schema(
-{
-    // id:{
-    //     type: String,
-    //     unique: true,
-    //     trim:true,
-    //     index:true
-    // },
-    name:{
-        type: String,
-        trim: true,
-        required:[true,"Required"],
-    },
-    username:{
-        type: String,
-        unique:true,
-        trim: true,
-        required:[true,"Required"],
-        index:true
-    },
-    email:{
-        type:String,
-        unique:true,
-        trim:true,
-        required:[true,"Required"],
-        lowercase:true,
-        index:true
-    },
-    contact:{
-        type:Number,
-        unique:true,
-        required:[true,"Required"],
-        max: 9999999999,
-        index:true,
-    },
-    password:{
-        type:String,
-        unique:false,
-        required:true,
-        lowercase:false,
-    },
-    history:
-    [
-        {
-            type: Schema.Types.ObjectId,
-            ref : "Song"
+dotenv.config();
+
+const userSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            trim: true,
+            required: [true, "Name is required"],
         },
-    ],
-    playlist:
-    [
-        {
-        type:String,
-        unique:true,
-        required:true,
-        index:true
+        username: {
+            type: String,
+            unique: true,
+            trim: true,
+            required: [true, "Username is required"],
+            index: true,
         },
-    ]
-}
-,
-{timestamps:true}
-)
+        email: {
+            type: String,
+            unique: true,
+            trim: true,
+            required: [true, "Email is required"],
+            lowercase: true,
+            index: true,
+        },
+        contact: {
+            type: Number,
+            unique: true,
+            required: [true, "Contact number is required"],
+            max: 9999999999,
+            index: true,
+        },
+        password: {
+            type: String,
+            required: [true, "Password is required"],
+        },
+        history: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Song",
+            },
+        ],
+        playlist: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Playlist",
+            },
+        ],
+    },
+    { timestamps: true }
+);
 
-userSchema.pre("save",async function(next){
-    if(!this.isModified("password")) return next();
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
 
-    this.password = bcrypt.hash(this.password,10);
+    this.password = await bcrypt.hash(this.password, 10);
     next();
-})
-userSchema.methods.passwordChecker = async function(password){
-    return await bcrypt.compare(password,this.password)
-}
-userSchema.methods.genAccessToken = async function(){
-}
-export default User = mongoose.model("User",userSchema);
+});
+
+userSchema.methods.passwordChecker = async function (password) {
+    return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.genAccessToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+            username: this.username,
+            email: this.email,
+            contact: this.contact,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+    );
+};
+
+userSchema.methods.genRefreshToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+        }
+    );
+};
+
+const User = mongoose.model("User", userSchema);
+export default User;
