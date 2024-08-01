@@ -2,28 +2,28 @@ import mongoose, { Schema } from "mongoose";
 
 const songSchema = new mongoose.Schema(
     {
-        name: {
+        songName: {
             type: String,
             required: true,
             trim: true,
         },
-        artists: [
+        songArtistList: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "User",
                 required: true,
             },
         ],
-        duration: {
+        songDuration: {
             type: Number,
             required: [true, "Duration is required"],
             max: 36000,
         },
-        album: {
+        songAlbum: {
             type: Schema.Types.ObjectId,
             ref: "Album",
         },
-        releaseDate: {
+        songReleaseDate: {
             type: String,
             required: [true, "Release date is required"],
             trim: true,

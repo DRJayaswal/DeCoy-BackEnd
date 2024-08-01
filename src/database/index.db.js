@@ -1,8 +1,8 @@
-import axios from "axios";
+// import axios from "axios";
 import mongoose from "mongoose";
 import dotenv from "dotenv"
-
 dotenv.config()
+import process from "process"
 
 export const connectDB = async () => {
     try {

@@ -2,12 +2,12 @@ import mongoose, { Schema } from "mongoose";
 
 const albumSchema = new mongoose.Schema(
     {
-        name:{
+        albumName:{
             type:String,
             trim:true,
             required:true,
         },
-        artists:
+        albumArtistList:
         [
             {
                 type: Schema.Types.ObjectId,
@@ -15,7 +15,19 @@ const albumSchema = new mongoose.Schema(
                 required:true,
             },
         ],
-        duration:{
+        albumTotalSongs:{
+            type:Number,
+            required:true,
+            max:99,
+        },
+        albumSongList: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Song",
+                required: true,
+            }
+        ],
+        albumDuration:{
             type:Number,
             max:36000,
             required:true,
@@ -27,3 +39,6 @@ const albumSchema = new mongoose.Schema(
         }
     }
 ,{timestamps:true})
+
+const Album = mongoose.model("Album",albumSchema);
+export default Album;

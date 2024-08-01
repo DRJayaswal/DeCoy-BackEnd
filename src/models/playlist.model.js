@@ -2,17 +2,17 @@ import mongoose, { Schema } from "mongoose";
 
 const playlistSchema = new mongoose.Schema(
     {
-        name: {
+        playlistName: {
             type: String,
             trim: true,
             required: [true, "Name is required"],
         },
-        duration: {
+        playlistDuration: {
             type: Number,
             max: 36000,
             required: [true, "Duration is required"],
         },
-        songs: [
+        playlist: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "Song",

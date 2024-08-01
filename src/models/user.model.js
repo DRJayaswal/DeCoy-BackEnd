@@ -2,24 +2,25 @@ import mongoose, { Schema } from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import process from "process"
 
 dotenv.config();
 
 const userSchema = new mongoose.Schema(
     {
-        name: {
+        userName: {
             type: String,
             trim: true,
             required: [true, "Name is required"],
         },
-        username: {
+        handlename: {
             type: String,
             unique: true,
             trim: true,
             required: [true, "Username is required"],
             index: true,
         },
-        email: {
+        userEmail: {
             type: String,
             unique: true,
             trim: true,
@@ -27,51 +28,57 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             index: true,
         },
-        contact: {
+        userContact: {
             type: Number,
             unique: true,
             required: [true, "Contact number is required"],
             max: 9999999999,
             index: true,
         },
-        password: {
+        userPassword: {
             type: String,
             required: [true, "Password is required"],
         },
-        history: [
+        userHistory: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "Song",
             },
         ],
-        playlist: [
+        userPlaylists: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "Playlist",
             },
         ],
-    },
-    { timestamps: true }
-);
+        userAlbums: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Album",
+            },
+        ],
+    },{ timestamps: true });
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
-
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
+    if (this.isModified("password")){
+        this.password = await bcrypt.hash(this.password, 10);
+        next();
+    }else{
+        return next();
+    }
 });
 
 userSchema.methods.passwordChecker = async function (password) {
-    return await bcrypt.compare(password, this.password);
+    return await bcrypt.compare(password, this.userPassword);
 };
 
 userSchema.methods.genAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            username: this.username,
-            email: this.email,
-            contact: this.contact,
+            handlename: this.handlename,
+            userEmail: this.userEmail,
+            userContact: this.userEmail,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
@@ -79,7 +86,6 @@ userSchema.methods.genAccessToken = function () {
         }
     );
 };
-
 userSchema.methods.genRefreshToken = function () {
     return jwt.sign(
         {
