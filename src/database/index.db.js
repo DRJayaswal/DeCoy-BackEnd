@@ -10,8 +10,7 @@ export const connectDB = async () => {
         console.log(`DB connected -> ${process.env.DB_NAME} Active : ${instance.connection.host}`);
     } catch (error) {
         console.error(`DB not connected -> ${process.env.DB_NAME} Inactive : ${process.env.DB_URI} ${error}`);
+        process.exit(1);
     }
 
 }
-
-// export default connectDB();
