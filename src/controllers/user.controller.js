@@ -8,7 +8,7 @@ const isEmpty = (string) => {
 };
 
 const regUser = asyncHandler(async (req, res) => {
-    const { userName, userPassword, userEmail, handleName, userHistory, userPlaylist, userAlbum, userContact } = req.body;
+    const { userName, userPassword, userEmail, userHistory, userPlaylist, userAlbum, userContact } = req.body;
     if (isEmpty(userName) || isEmpty(userPassword) || isEmpty(userEmail)) {
         res.status(400).send("Username, Password, and Email are required.");
         return;
@@ -26,13 +26,13 @@ const regUser = asyncHandler(async (req, res) => {
         res.status(409).send("Username or Email already exists.");
         return;
     }
-    const user = new User.create({
+    const user = await User.create({
         userName,
-        handleName,
         userContact,
         userEmail,
         userPassword
     })
+    return res.status(200).json({ user })
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -50,9 +50,9 @@ const loginUser = asyncHandler(async (req, res) => {
         } else {
             const passwordMatches = await user.passwordChecker(userPassword);
             if (passwordMatches) {
-                res.status(200).send("Login successful.");
+                res.status(401).json({ "Login": passwordMatches });
             } else {
-                res.status(401).send("Incorrect password.");
+                res.status(401).json({ "Login": passwordMatches });
             }
         }
     } catch (error) {

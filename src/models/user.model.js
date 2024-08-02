@@ -10,11 +10,6 @@ const userSchema = new mongoose.Schema(
     {
         userName: {
             type: String,
-            trim: true,
-            required: [true, "Name is required"],
-        },
-        handlename: {
-            type: String,
             unique: true,
             trim: true,
             required: [true, "Username is required"],
@@ -60,8 +55,8 @@ const userSchema = new mongoose.Schema(
     },{ timestamps: true });
 
 userSchema.pre("save", async function (next) {
-    if (this.isModified("password")){
-        this.password = await bcrypt.hash(this.password, 10);
+    if (this.isModified("userPassword")){
+        this.userPassword = await bcrypt.hash(this.userPassword, 10);
         next();
     }else{
         return next();
@@ -69,7 +64,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.passwordChecker = async function (password) {
-    return await bcrypt.compare(password, this.userPassword);
+    return await bcrypt.compare(password,this.userPassword)
 };
 
 userSchema.methods.genAccessToken = function () {

@@ -1,4 +1,4 @@
-import { connectDB } from "./src/database/index.db.js"
+import connectDB from "./src/database/index.db.js"
 import dotenv from "dotenv"
 dotenv.config()
 import process from "process"
