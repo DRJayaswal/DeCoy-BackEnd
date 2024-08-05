@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
                 ref: "Playlist",
             },
         ],
+        refreshToken:{
+            type: String,
+            value: ""
+        },
         userAlbums: [
             {
                 type: Schema.Types.ObjectId,
