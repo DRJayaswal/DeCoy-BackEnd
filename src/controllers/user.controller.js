@@ -1,10 +1,7 @@
-/* eslint-disable no-unused-vars */
-
 import asyncHandler from "../utilities/asyncHandler.utility.js";
 import User from "../models/user.model.js";
 import ApiError from "../utilities/ApiError.utility.js";
 import ApiResponse from "../utilities/ApiResponse.utility.js";
-import { json } from "express";
 
 const isEmpty = (string) => {
   return !string || string.length === 0;
@@ -12,17 +9,16 @@ const isEmpty = (string) => {
 const genAccRef = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const acc = user.genAccessToken();
-    const ref = user.genRefreshToken();
+    const accessToken = user.genAccessToken();
+    const refreshToken = user.genRefreshToken();
 
-    user.refreshToken = ref;
-    user.save({ validateBeforeSave: false });
-    return { acc, ref };
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
   } catch (error) {
-    console.error(`Error : ${error}`);
+    console.error(`Error: ${error}`);
   }
 };
-
 const regUser = asyncHandler(async (req, res) => {
   const { userName, userPassword, userEmail, userContact, refreshToken } =
     req.body;
@@ -67,7 +63,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { userName, userPassword } = req.body;
 
   if (isEmpty(userName) || isEmpty(userPassword)) {
-    throw new ApiError(400, "username or email is required");
+    throw new ApiError(400, "Username or password is required");
   }
 
   const user = await User.findOne({ userName });
@@ -82,44 +78,49 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { accessToken, refreshToken } = await genAccRef(user._id);
   
-  const options = {
+  const cookieOptions = {
     httpOnly: true,
     secure: true,
+    sameSite: "Strict",
   };
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
         new ApiResponse(
             200, 
             {
-                user: user, accessToken, refreshToken
+                user, accessToken, refreshToken
             },
             "User Logged In Successfully !!"
         )
     );
 });
 const logoutUser = asyncHandler(async (req, res) => {
-    User.findById(req.ser._id,
-        {
-            $set:{
-                refreshToken:undefined
-            }
-        },
-        {
-            new:true
-        }
-    )
-    const options = {
-        httpOnly: true,
-        secure: true,
-      };
-    return res.status(200).clearCookie("refreshToken",refreshToken,options).clearCookie("accessToken",accessToken,options).json(
-        new ApiResponse(200,{},`${req.user.userName} Logged Out Successfully !!`)
-    )
-});
+  await User.findByIdAndUpdate(
+      req.user._id,
+      {
+          $set: {
+              refreshToken: undefined,
+          },
+      }
+  );
 
+  const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+  };
+
+  return res
+      .status(200)
+      .clearCookie("refreshToken", cookieOptions)
+      .clearCookie("accessToken", cookieOptions)
+      .json(
+          new ApiResponse(200, {}, `${req.user.userName} Logged Out Successfully !!`)
+      );
+});
 
 export { regUser, loginUser,logoutUser };
